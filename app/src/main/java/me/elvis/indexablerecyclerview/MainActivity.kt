@@ -1,16 +1,16 @@
 package me.elvis.indexablerecyclerview
 
-import android.support.v7.app.AppCompatActivity
+import android.app.Activity
 import android.os.Bundle
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
 import android.view.View
 import android.view.ViewGroup
 import android.widget.SectionIndexer
 import android.widget.TextView
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.activity_main.*
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : Activity() {
 
     private val datas = arrayOf(
         "A",
@@ -44,7 +44,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         val adapter = MyAdapter()
-        list.layoutManager = LinearLayoutManager(this)
+        list.layoutManager =
+            LinearLayoutManager(this)
         list.adapter = adapter
     }
 
