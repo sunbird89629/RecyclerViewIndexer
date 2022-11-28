@@ -1,1 +1,1 @@
-include ':app', ':indexablerecyclerview'
+include ':app', ':library'
