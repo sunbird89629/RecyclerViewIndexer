@@ -10,9 +10,11 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.util.AttributeSet
+import android.util.Log
 import me.elvis.view.R
 import android.util.TypedValue
 import android.view.MotionEvent
+import androidx.core.graphics.toRect
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlin.jvm.JvmOverloads
 import me.elvis.view.IndexScroller
@@ -22,6 +24,10 @@ class IndexScroller internal constructor(
     attrs: AttributeSet?,
     private val mRv: RecyclerView
 ) : AdapterDataObserver() {
+    companion object {
+        val TAG = IndexScroller::class.simpleName
+    }
+
     private var mIndexer: SectionIndexer? = null
     private var mSections: Array<String>? = null
     private var mIndexbarRect: RectF? = null
@@ -68,6 +74,9 @@ class IndexScroller internal constructor(
     }
 
     fun draw(canvas: Canvas) {
+        if (BuildConfig.DEBUG) {
+            drawDebug(canvas)
+        }
         if (mSections != null && mSections!!.size > 0) {
             if (mCurrentSection >= 0) {
                 val previewPaint = Paint()
@@ -102,6 +111,12 @@ class IndexScroller internal constructor(
                 )
             }
         }
+    }
+
+    fun drawDebug(canvas: Canvas) {
+        val rect = mIndexbarRect ?: return
+        canvas.clipRect(rect.toRect())
+        canvas.drawColor(Color.RED)
     }
 
     fun onTouchEvent(ev: MotionEvent): Boolean {
@@ -142,6 +157,7 @@ class IndexScroller internal constructor(
         mListViewWidth = w
         mListViewHeight = h
         initRect()
+        Log.i(TAG, "onSizeChanged>>mIndexbarRect:${mIndexbarRect.toString()}")
     }
 
     fun setAdapter(adapter: RecyclerView.Adapter<*>?) {

@@ -78,6 +78,5 @@ class MainActivity : Activity() {
 
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val tv: TextView = view.findViewById(R.id.tv)
-
     }
 }

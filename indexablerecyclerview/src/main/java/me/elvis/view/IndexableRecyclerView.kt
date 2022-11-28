@@ -1,19 +1,10 @@
 package me.elvis.view
 
 import android.content.Context
-import androidx.recyclerview.widget.RecyclerView
-import androidx.recyclerview.widget.RecyclerView.AdapterDataObserver
-import android.widget.SectionIndexer
-import android.graphics.RectF
-import android.content.res.TypedArray
 import android.graphics.Canvas
 import android.util.AttributeSet
-import me.elvis.view.R
-import android.util.TypedValue
 import android.view.MotionEvent
-import androidx.recyclerview.widget.LinearLayoutManager
-import kotlin.jvm.JvmOverloads
-import me.elvis.view.IndexScroller
+import androidx.recyclerview.widget.RecyclerView
 
 class IndexableRecyclerView @JvmOverloads constructor(
     context: Context,
