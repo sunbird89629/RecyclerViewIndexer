@@ -1,12 +1,12 @@
 package me.elvis.indexablerecyclerview
 
 import android.app.Activity
-import android.graphics.Color
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
 import android.widget.SectionIndexer
 import android.widget.TextView
+import androidx.annotation.IntDef
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -68,30 +68,46 @@ class MainActivity : Activity() {
         list.adapter = adapter
     }
 
-    inner class MyAdapter : RecyclerView.Adapter<ViewHolder>(), SectionIndexer {
+    inner class MyAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>(), SectionIndexer {
 
-        override fun onCreateViewHolder(p0: ViewGroup, p1: Int): ViewHolder {
-            return ViewHolder(layoutInflater.inflate(R.layout.item, p0, false))
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+            return when (viewType) {
+                ItemType.SECTION -> SectionViewHolder(
+                    layoutInflater.inflate(
+                        R.layout.section,
+                        parent,
+                        false
+                    )
+                )
+                else -> ItemViewHolder(layoutInflater.inflate(R.layout.item, parent, false))
+            }
         }
 
         override fun getItemCount(): Int {
             return indexAndData.size
         }
 
-        override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-            val item = indexAndData[position]
-            holder.tv.text = item.content
-            val backgroundColorResId = if (item.isIndex) {
-                R.color.listSection
-            } else {
-                R.color.listItem
+        override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+            val model = indexAndData[position]
+            when (holder) {
+                is SectionViewHolder -> {
+                    holder.model = model
+                    holder.bind()
+                }
+                is ItemViewHolder -> {
+                    holder.model = model
+                    holder.bind()
+                }
             }
-            holder.tv.setBackgroundColor(
-                ContextCompat.getColor(
-                    this@MainActivity,
-                    backgroundColorResId
-                )
-            )
+        }
+
+        override fun getItemViewType(position: Int): Int {
+            val item = indexAndData[position]
+            return if (item.isIndex) {
+                ItemType.SECTION
+            } else {
+                ItemType.ITEM
+            }
         }
 
         override fun getSections(): Array<String> {
@@ -109,12 +125,34 @@ class MainActivity : Activity() {
             }
         }
     }
-
-    inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val tv: TextView = view.findViewById(R.id.tv)
-    }
-
-
 }
 
 class Item(val content: String, val isIndex: Boolean)
+
+class SectionViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    lateinit var model: Item
+    private val tvTitle: TextView = itemView.findViewById(R.id.tv)
+    fun bind() {
+        tvTitle.text = model.content
+    }
+}
+
+class ItemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    lateinit var model: Item
+    private val tvTitle: TextView = itemView.findViewById(R.id.tv)
+    fun bind() {
+        tvTitle.text = model.content
+    }
+}
+
+@Retention(AnnotationRetention.SOURCE)
+@Target(AnnotationTarget.FIELD, AnnotationTarget.VALUE_PARAMETER)
+@IntDef(ItemType.SECTION, ItemType.ITEM)
+annotation class ItemType {
+    companion object {
+        const val SECTION = 1
+        const val ITEM = 2
+    }
+}
+
+

@@ -4,5 +4,5 @@
         android:id="@+id/tv"
         android:padding="16dp"
         android:gravity="left"
-        android:background="@color/listItem"
+        android:background="@color/listSection"
         android:layout_height="wrap_content" />
