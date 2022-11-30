@@ -1,15 +1,19 @@
 package me.elvis.indexablerecyclerview
 
 import android.app.Activity
+import android.content.Context
+import android.graphics.Canvas
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.SectionIndexer
 import android.widget.TextView
 import androidx.annotation.IntDef
-import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : Activity() {
@@ -62,10 +66,32 @@ class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        initRecyclerView()
+    }
+
+    private fun initRecyclerView() {
         val adapter = MyAdapter()
-        list.layoutManager =
-            LinearLayoutManager(this)
+        list.layoutManager = StickyVerticalLayoutManager(this)
         list.adapter = adapter
+        list.addItemDecoration(
+            SectionItemDecoration(
+                this@MainActivity,
+                object : SectionItemDecoration.Callback {
+                    override fun isSectionItem(position: Int): Boolean {
+                        return indexAndData[position].isIndex
+                    }
+
+                    override fun geSectionContent(position: Int): String {
+                        for (i in position downTo 0) {
+                            val item = indexAndData[i]
+                            if (item.isIndex) {
+                                return item.content
+                            }
+                        }
+                        return ""
+                    }
+                })
+        )
     }
 
     inner class MyAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>(), SectionIndexer {
@@ -152,6 +178,107 @@ annotation class ItemType {
     companion object {
         const val SECTION = 1
         const val ITEM = 2
+    }
+}
+
+class StickyVerticalLayoutManager(context: Context) : LinearLayoutManager(context) {
+
+}
+
+class SectionItemDecoration(
+    private val context: Context,
+    private val callback: Callback
+) : RecyclerView.ItemDecoration() {
+    private val mTitleHeight: Int
+    private val mTitleLayout: View = LayoutInflater.from(context).inflate(R.layout.section, null)
+    private val mTvTitle: TextView = mTitleLayout.findViewById(R.id.tv)
+
+    init {
+        mTitleLayout.measure(View.MeasureSpec.AT_MOST, View.MeasureSpec.UNSPECIFIED)
+        mTitleHeight = mTitleLayout.measuredHeight
+    }
+
+    override fun onDrawOver(c: Canvas, parent: RecyclerView, state: RecyclerView.State) {
+        super.onDrawOver(c, parent, state)
+        val layoutManager = parent.layoutManager ?: return
+        val firstVisiblePosition = findFirstVisibleItemPosition(layoutManager)
+        val firstVisibleView =
+            parent.findViewHolderForAdapterPosition(firstVisiblePosition)?.itemView ?: return
+        if (firstVisiblePosition <= -1 || firstVisiblePosition >= parent.adapter!!.itemCount - 1) return
+
+        val left = parent.paddingLeft
+        val right = parent.width - parent.paddingRight
+        var top = parent.paddingTop
+
+        if (
+            nextLineIsTitle(
+                firstVisibleView,
+                firstVisiblePosition,
+                parent
+            )
+        ) {
+            top = if (firstVisibleView.bottom > mTitleHeight) {
+                parent.paddingTop
+            } else {
+                firstVisibleView.bottom - mTitleHeight + parent.paddingTop
+            }
+        }
+        drawStickySection(c, top, firstVisiblePosition, left, right)
+    }
+
+    private fun findFirstVisibleItemPosition(layoutManager: RecyclerView.LayoutManager): Int {
+        return when (layoutManager) {
+            is LinearLayoutManager -> {
+                layoutManager.findFirstVisibleItemPosition()
+            }
+            is GridLayoutManager -> {
+                layoutManager.findFirstVisibleItemPosition()
+            }
+            is StaggeredGridLayoutManager -> {
+                layoutManager.findFirstVisibleItemPositions(null)[0]
+            }
+            else -> {
+                throw RuntimeException("The LayoutManager type ${layoutManager::class.java.name} is not supported!")
+            }
+        }
+    }
+
+    private fun drawStickySection(canvas: Canvas, top: Int, position: Int, left: Int, right: Int) {
+        mTitleLayout.layout(left, 0, right, mTitleHeight)
+        mTvTitle.text = callback.geSectionContent(position)
+        canvas.save()
+        canvas.translate(0f, top.toFloat())
+        mTitleLayout.draw(canvas)
+        canvas.restore()
+    }
+
+    private fun nextLineIsTitle(
+        currentView: View,
+        currentPosition: Int,
+        parent: RecyclerView
+    ): Boolean {
+        val adapter = parent.adapter ?: return false
+        for (nextLinePosition in currentPosition + 1 until adapter.itemCount) {
+            val nextItemView =
+                parent.findViewHolderForAdapterPosition(nextLinePosition)?.itemView ?: return false
+            if (nextItemView.bottom > currentView.bottom) {
+                return callback.isSectionItem(nextLinePosition)
+            }
+        }
+        return false
+    }
+
+
+    interface Callback {
+        /**
+         * is  the ViewHolder at position type section
+         */
+        fun isSectionItem(position: Int): Boolean
+
+        /**
+         *
+         */
+        fun geSectionContent(position: Int): String
     }
 }
 

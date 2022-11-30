@@ -1,8 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<TextView xmlns:android="http://schemas.android.com/apk/res/android"
-        android:layout_width="match_parent"
-        android:id="@+id/tv"
-        android:padding="16dp"
-        android:gravity="left"
+<androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="300dp"
+        android:orientation="vertical"
         android:background="@color/listSection"
-        android:layout_height="wrap_content" />
+        android:paddingStart="16dp"
+        android:layout_height="50dp"
+        android:paddingLeft="16dp">
+
+    <TextView
+            android:layout_width="300dp"
+            android:id="@+id/tv"
+            android:text="Test"
+            android:textSize="20sp"
+            android:textColor="@color/colorPrimary"
+            android:gravity="left|center_vertical"
+            android:layout_height="50dp" />
+</androidx.appcompat.widget.LinearLayoutCompat>

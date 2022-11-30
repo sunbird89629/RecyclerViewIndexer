@@ -29,5 +29,5 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation project(':library')
     implementation 'androidx.recyclerview:recyclerview:1.2.1'
-
+    implementation 'com.blankj:utilcodex:1.31.1'
 }
