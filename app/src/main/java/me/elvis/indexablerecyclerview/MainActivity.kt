@@ -71,7 +71,7 @@ class MainActivity : Activity() {
 
     private fun initRecyclerView() {
         val adapter = MyAdapter()
-        list.layoutManager = StickyVerticalLayoutManager(this)
+        list.layoutManager = LinearLayoutManager(this)
         list.adapter = adapter
         list.addItemDecoration(
             SectionItemDecoration(
@@ -181,9 +181,6 @@ annotation class ItemType {
     }
 }
 
-class StickyVerticalLayoutManager(context: Context) : LinearLayoutManager(context) {
-
-}
 
 class SectionItemDecoration(
     private val context: Context,

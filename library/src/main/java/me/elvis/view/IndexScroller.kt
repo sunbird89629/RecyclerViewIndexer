@@ -26,12 +26,20 @@ class IndexScroller internal constructor(
 ) : AdapterDataObserver() {
     companion object {
         val TAG = IndexScroller::class.simpleName
+
+        val UN_TOUCHED_BACKGROUND_COLOR = Color.parseColor("#20000000")
+        val TOUCHED_BACKGROUND_COLOR = Color.parseColor("#60000000")
     }
 
     private var mIndexer: SectionIndexer? = null
     private var mSections: Array<String>? = null
     private var mIndexbarRect: RectF? = null
     private val mIndexPaint: Paint
+    private val mBackgroundPaint: Paint by lazy {
+        Paint().apply {
+            color = Color.parseColor("#20000000")
+        }
+    }
     private val mDensity: Float
     private val mScaledDensity: Float
     private var mSingle = 0f
@@ -45,6 +53,11 @@ class IndexScroller internal constructor(
     private var mListViewHeight = 0
     private var mCurrentSection = -1
     private var mIsIndexing = false
+
+    /**
+     * is current index touched
+     */
+    private var mTouched = false
 
     init {
         mDensity = context.resources.displayMetrics.density
@@ -74,9 +87,10 @@ class IndexScroller internal constructor(
     }
 
     fun draw(canvas: Canvas) {
-        if (BuildConfig.DEBUG) {
-            drawDebug(canvas)
-        }
+//        if (BuildConfig.DEBUG) {
+//            drawDebug(canvas)
+//        }
+        drawBackground(canvas)
         if (mSections != null && mSections!!.size > 0) {
             if (mCurrentSection >= 0) {
                 val previewPaint = Paint()
@@ -113,6 +127,17 @@ class IndexScroller internal constructor(
         }
     }
 
+    private fun drawBackground(canvas: Canvas) {
+        val rect = mIndexbarRect ?: return
+        mBackgroundPaint.color = if (mTouched) {
+            TOUCHED_BACKGROUND_COLOR
+        } else {
+            UN_TOUCHED_BACKGROUND_COLOR
+        }
+        Log.d("drawBackground", "backgroundColor:${mBackgroundPaint.color}")
+        canvas.drawRoundRect(rect, 20f, 20f, mBackgroundPaint)
+    }
+
     fun drawDebug(canvas: Canvas) {
         val rect = mIndexbarRect ?: return
         canvas.clipRect(rect.toRect())
@@ -121,8 +146,9 @@ class IndexScroller internal constructor(
 
     fun onTouchEvent(ev: MotionEvent): Boolean {
         when (ev.action) {
-            MotionEvent.ACTION_DOWN ->                 // If down event occurs inside index bar region, start indexing
+            MotionEvent.ACTION_DOWN -> { // If down event occurs inside index bar region, start indexing
                 if (contains(ev.x, ev.y)) {
+                    mTouched = true
                     // It demonstrates that the motion event started from index bar
                     mIsIndexing = true
                     // Determine which section the point is in, and move the list to that section
@@ -130,6 +156,7 @@ class IndexScroller internal constructor(
                     scrollToPosition(mIndexer!!.getPositionForSection(mCurrentSection))
                     return true
                 }
+            }
             MotionEvent.ACTION_MOVE -> if (mIsIndexing) {
                 // If this event moves inside index bar
                 if (contains(ev.x, ev.y)) {
@@ -139,10 +166,13 @@ class IndexScroller internal constructor(
                 }
                 return true
             }
-            MotionEvent.ACTION_UP -> if (mIsIndexing) {
-                mIsIndexing = false
-                mCurrentSection = -1
-                mRv.invalidate()
+            MotionEvent.ACTION_UP -> {
+                mTouched = false
+                if (mIsIndexing) {
+                    mIsIndexing = false
+                    mCurrentSection = -1
+                    mRv.invalidate()
+                }
             }
         }
         return false
