@@ -5,19 +5,17 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.AdapterDataObserver
 import android.widget.SectionIndexer
 import android.graphics.RectF
-import android.content.res.TypedArray
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.util.AttributeSet
 import android.util.Log
-import me.elvis.view.R
 import android.util.TypedValue
 import android.view.MotionEvent
+import androidx.core.graphics.ColorUtils
 import androidx.core.graphics.toRect
 import androidx.recyclerview.widget.LinearLayoutManager
-import kotlin.jvm.JvmOverloads
-import me.elvis.view.IndexScroller
+import kotlin.math.floor
 
 class IndexScroller internal constructor(
     context: Context,
@@ -27,18 +25,19 @@ class IndexScroller internal constructor(
     companion object {
         val TAG = IndexScroller::class.simpleName
 
-        val UN_TOUCHED_BACKGROUND_COLOR = Color.parseColor("#20000000")
-        val TOUCHED_BACKGROUND_COLOR = Color.parseColor("#60000000")
+        val DEFAULT_BACKGROUND_COLOR = Color.parseColor("#20000000")
+        val DEFAULT_TOUCHED_BACKGROUND_COLOR = Color.parseColor("#60000000")
     }
 
     private var mIndexer: SectionIndexer? = null
     private var mSections: Array<String>? = null
     private var mIndexbarRect: RectF? = null
     private val mIndexPaint: Paint
+    private var mBackgroundColor: Int
+
+    private var mTouchedBackgroundColor: Int
     private val mBackgroundPaint: Paint by lazy {
-        Paint().apply {
-            color = Color.parseColor("#20000000")
-        }
+        Paint()
     }
     private val mDensity: Float
     private val mScaledDensity: Float
@@ -57,7 +56,7 @@ class IndexScroller internal constructor(
     /**
      * is current index touched
      */
-    private var mTouched = false
+    private var mIndexTouched = false
 
     init {
         mDensity = context.resources.displayMetrics.density
@@ -76,22 +75,31 @@ class IndexScroller internal constructor(
             TypedValue.COMPLEX_UNIT_SP,
             12f, context.resources.displayMetrics
         ).toInt()
-        val textSize =
+        val theTextSize =
             ta.getDimensionPixelSize(R.styleable.IndexableRecyclerView_textSize, defTextSize)
+
+        val theColor =
+            ta.getColor(R.styleable.IndexableRecyclerView_backgroundColor, DEFAULT_BACKGROUND_COLOR)
+        mBackgroundColor = ColorUtils.setAlphaComponent(theColor, 0x20)
+        mTouchedBackgroundColor = ColorUtils.setAlphaComponent(theColor, 0x60)
         ta.recycle()
-        mIndexPaint = Paint()
-        mIndexPaint.color = textColor
-        mIndexPaint.isAntiAlias = true
-        mIndexPaint.textSize = textSize.toFloat()
-        mIndexPaint.textAlign = Paint.Align.CENTER
+
+        mIndexPaint = Paint().apply {
+            color = textColor
+            isAntiAlias = true
+            textSize = theTextSize.toFloat()
+            textAlign = Paint.Align.CENTER
+        }
+
     }
 
     fun draw(canvas: Canvas) {
-//        if (BuildConfig.DEBUG) {
-//            drawDebug(canvas)
-//        }
         drawBackground(canvas)
-        if (mSections != null && mSections!!.size > 0) {
+        drawIndex(canvas)
+    }
+
+    private fun drawIndex(canvas: Canvas) {
+        if (mSections != null && mSections!!.isNotEmpty()) {
             if (mCurrentSection >= 0) {
                 val previewPaint = Paint()
                 previewPaint.color = Color.BLACK
@@ -129,12 +137,11 @@ class IndexScroller internal constructor(
 
     private fun drawBackground(canvas: Canvas) {
         val rect = mIndexbarRect ?: return
-        mBackgroundPaint.color = if (mTouched) {
-            TOUCHED_BACKGROUND_COLOR
+        mBackgroundPaint.color = if (mIndexTouched) {
+            mTouchedBackgroundColor
         } else {
-            UN_TOUCHED_BACKGROUND_COLOR
+            mBackgroundColor
         }
-        Log.d("drawBackground", "backgroundColor:${mBackgroundPaint.color}")
         canvas.drawRoundRect(rect, 20f, 20f, mBackgroundPaint)
     }
 
@@ -148,7 +155,7 @@ class IndexScroller internal constructor(
         when (ev.action) {
             MotionEvent.ACTION_DOWN -> { // If down event occurs inside index bar region, start indexing
                 if (contains(ev.x, ev.y)) {
-                    mTouched = true
+                    mIndexTouched = true
                     // It demonstrates that the motion event started from index bar
                     mIsIndexing = true
                     // Determine which section the point is in, and move the list to that section
@@ -167,7 +174,7 @@ class IndexScroller internal constructor(
                 return true
             }
             MotionEvent.ACTION_UP -> {
-                mTouched = false
+                mIndexTouched = false
                 if (mIsIndexing) {
                     mIsIndexing = false
                     mCurrentSection = -1
@@ -213,7 +220,10 @@ class IndexScroller internal constructor(
     private fun initRect() {
         val margin = (mListViewHeight - mHeight) / 2
         mIndexbarRect = RectF(
-            mListViewWidth - mWidth, margin, mListViewWidth.toFloat(), mListViewHeight - margin
+            mListViewWidth - mWidth,
+            margin,
+            mListViewWidth.toFloat(),
+            mListViewHeight - margin
         )
     }
 
@@ -222,8 +232,11 @@ class IndexScroller internal constructor(
     }
 
     private fun getSectionByPoint(y: Float): Int {
-        return if (mSections == null || mSections!!.size == 0) 0 else Math.floor(((y - mIndexbarRect!!.top) / (mSingle + mGap)).toDouble())
-            .toInt()
+        return if (mSections == null || mSections!!.isEmpty()) {
+            0
+        } else {
+            floor(((y - mIndexbarRect!!.top) / (mSingle + mGap)).toDouble()).toInt()
+        }
     }
 
     override fun onChanged() {
