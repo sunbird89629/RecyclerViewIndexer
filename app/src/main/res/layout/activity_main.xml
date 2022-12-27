@@ -6,7 +6,7 @@
         android:layout_height="match_parent"
         tools:context=".MainActivity">
 
-    <me.elvis.view.IndexableRecyclerView
+    <me.elvis.view.IndexRecyclerView
             android:id="@+id/list"
             app:textColor="@color/colorPrimary"
             app:backgroundColor="@color/index_background"

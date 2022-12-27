@@ -24,9 +24,7 @@ class IndexScroller internal constructor(
 ) : AdapterDataObserver() {
     companion object {
         val TAG = IndexScroller::class.simpleName
-
         val DEFAULT_BACKGROUND_COLOR = Color.parseColor("#20000000")
-        val DEFAULT_TOUCHED_BACKGROUND_COLOR = Color.parseColor("#60000000")
     }
 
     private var mIndexer: SectionIndexer? = null
@@ -61,14 +59,14 @@ class IndexScroller internal constructor(
     init {
         mDensity = context.resources.displayMetrics.density
         mScaledDensity = context.resources.displayMetrics.scaledDensity
-        val ta = context.obtainStyledAttributes(attrs, R.styleable.IndexableRecyclerView)
-        val textColor = ta.getColor(R.styleable.IndexableRecyclerView_textColor, Color.BLACK)
+        val ta = context.obtainStyledAttributes(attrs, R.styleable.IndexRecyclerView)
+        val textColor = ta.getColor(R.styleable.IndexRecyclerView_textColor, Color.BLACK)
         mPadding = ta.getDimensionPixelSize(
-            R.styleable.IndexableRecyclerView_padding,
+            R.styleable.IndexRecyclerView_padding,
             (10 * mDensity + 0.5).toInt()
         ).toFloat()
         mGap = ta.getDimensionPixelSize(
-            R.styleable.IndexableRecyclerView_padding,
+            R.styleable.IndexRecyclerView_padding,
             (3 * mDensity + 0.5).toInt()
         ).toFloat()
         val defTextSize = TypedValue.applyDimension(
@@ -76,10 +74,10 @@ class IndexScroller internal constructor(
             12f, context.resources.displayMetrics
         ).toInt()
         val theTextSize =
-            ta.getDimensionPixelSize(R.styleable.IndexableRecyclerView_textSize, defTextSize)
+            ta.getDimensionPixelSize(R.styleable.IndexRecyclerView_textSize, defTextSize)
 
         val theColor =
-            ta.getColor(R.styleable.IndexableRecyclerView_backgroundColor, DEFAULT_BACKGROUND_COLOR)
+            ta.getColor(R.styleable.IndexRecyclerView_backgroundColor, DEFAULT_BACKGROUND_COLOR)
         mBackgroundColor = ColorUtils.setAlphaComponent(theColor, 0x20)
         mTouchedBackgroundColor = ColorUtils.setAlphaComponent(theColor, 0x60)
         ta.recycle()

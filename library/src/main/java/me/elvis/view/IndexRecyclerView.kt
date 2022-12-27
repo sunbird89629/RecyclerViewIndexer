@@ -6,7 +6,7 @@ import android.util.AttributeSet
 import android.view.MotionEvent
 import androidx.recyclerview.widget.RecyclerView
 
-class IndexableRecyclerView @JvmOverloads constructor(
+class IndexRecyclerView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet?,
     defStyle: Int = 0
@@ -29,18 +29,17 @@ class IndexableRecyclerView @JvmOverloads constructor(
         // Intercept ListView's touch event
         return if (isEnableIndex && mIndexScroller.onTouchEvent(ev)) {
             true
-        } else super.onTouchEvent(ev)
+        } else {
+            super.onTouchEvent(ev)
+        }
     }
 
-    override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
-        return if (isEnableIndex && mIndexScroller.contains(
-                ev.x,
-                ev.y
-            )
-        ) true else super.onInterceptTouchEvent(
-            ev
-        )
-    }
+    override fun onInterceptTouchEvent(ev: MotionEvent): Boolean =
+        if (isEnableIndex && mIndexScroller.contains(ev.x, ev.y)) {
+            true
+        } else {
+            super.onInterceptTouchEvent(ev)
+        }
 
     override fun setAdapter(adapter: Adapter<*>?) {
         super.setAdapter(adapter)
